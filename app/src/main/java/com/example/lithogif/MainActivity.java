@@ -18,9 +18,7 @@ import com.example.lithogif.models.db.PreferenceLikeStore;
 import com.example.lithogif.utils.GifListUtils;
 import com.facebook.litho.Component;
 import com.facebook.litho.ComponentContext;
-import com.facebook.litho.EventDispatcher;
 import com.facebook.litho.EventHandler;
-import com.facebook.litho.HasEventDispatcher;
 import com.facebook.litho.LithoView;
 import com.facebook.litho.widget.RecyclerBinder;
 
@@ -49,18 +47,13 @@ public class MainActivity extends AppCompatActivity {
 
         final LikeStore likeStore = new PreferenceLikeStore(this);
 
-        final EventHandler likeChangeHandler = new EventHandler((HasEventDispatcher) () -> (EventDispatcher) (eventHandler, eventState) -> {
+        final EventHandler likeChangeHandler = new EventHandler(() -> (eventHandler, eventState) -> {
             LikeChangeEvent event = (LikeChangeEvent) eventState;
             likeStore.setLiked(event.gifId, event.isLiked);
             return null;
         }, LIKE_EVENT_ID, null);
 
-        final GifItemViewSpec.GifCallback callback = new GifItemViewSpec.GifCallback() {
-            @Override
-            public void onGifSelected(GifItem gif, Component gifComponent) {
-                showFullScreen(c, glide, gif, likeStore, likeChangeHandler, gifComponent);
-            }
-        };
+        final GifItemViewSpec.GifCallback callback = (gif, gifComponent) -> showFullScreen(c, glide, gif, likeStore, likeChangeHandler, gifComponent);
 
         final GifProvider.ResponseListener responseListener = new GifProvider.ResponseListener() {
             @Override
@@ -76,12 +69,9 @@ public class MainActivity extends AppCompatActivity {
 
         final GifProvider gifProvider = new GifProvider(responseListener, likeStore);
 
-        final HomeComponentSpec.OnQueryUpdateListener queryListener = new HomeComponentSpec.OnQueryUpdateListener() {
-            @Override
-            public void onQueryUpdated(String query) {
-                if (query.length() >= 6) {
-                    gifProvider.search(query);
-                }
+        final HomeComponentSpec.OnQueryUpdateListener queryListener = query -> {
+            if (query.length() >= 6) {
+                gifProvider.search(query);
             }
         };
 
